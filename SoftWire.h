@@ -1,5 +1,6 @@
 #ifndef SOFTWIRE_H
 #define SOFTWIRE_H
+#include <Arduino.h>
 
 #include <stdint.h>
 
@@ -15,21 +16,24 @@ public:
     writeMode = 0,
     readMode = 1,
   };
-  
-  static uint16_t defaultTimeout_ms;
+
+  static const uint8_t defaultDelay_us = 10;
+  static const uint16_t defaultTimeout_ms = 100;
   
   SoftWire(uint8_t sda, uint8_t scl);
   inline uint8_t getSda(void) const;  
   inline uint8_t getScl(void) const;
-  inline uint16_t getTimeout(void) const;
+  inline uint8_t getDelay_us(void) const;
+  inline uint16_t getTimeout_ms(void) const;
 
   // begin() must be called after any changes are made to SDA and/or
   // SCL pins.
   inline void setSda(uint8_t sda); 
   inline void setScl(uint8_t scl);
-  inline void enablePullups(bool enablePullups);
-  
-  inline void setTimeout(uint16_t timeout_ms);
+  inline void enablePullups(bool enablePullups = true);
+
+  inline void setDelay_us(uint8_t delay_us);
+  inline void setTimeout_ms(uint16_t timeout_ms);
 
   // begin() must be called before use, and after any changes are made
   // to the SDA and/or SCL pins.
@@ -72,7 +76,12 @@ uint8_t SoftWire::getScl(void) const
 }
 
 
-uint16_t SoftWire::getTimeout(void) const
+uint8_t SoftWire::getDelay_us(void) const
+{
+  return _delay_us;
+}
+
+uint16_t SoftWire::getTimeout_ms(void) const
 {
   return _timeout_ms;
 }
@@ -95,10 +104,18 @@ void SoftWire::enablePullups(bool enable)
   _inputMode = (enable ? INPUT_PULLUP : INPUT);
 }
 
-void SoftWire::setTimeout(uint16_t timeout_ms)
+
+void SoftWire::setDelay_us(uint8_t delay_us)
+{
+  _delay_us = delay_us;
+}
+
+
+void SoftWire::setTimeout_ms(uint16_t timeout_ms)
 {
   _timeout_ms = timeout_ms;
 }
+
 
 
 SoftWire::result_t SoftWire::start(uint8_t addr, mode_t rwMode) const

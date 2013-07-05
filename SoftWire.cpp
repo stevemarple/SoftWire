@@ -1,14 +1,12 @@
 #include <SoftWire.h>
 #include <AsyncDelay.h>
 
-uint16_t SoftWire::defaultTimeout_ms = 100; 
-
 SoftWire::SoftWire(uint8_t sda, uint8_t scl)
 {
   _sda = sda;
   _scl = scl;
   _inputMode = INPUT; // Pullups disabled by default
-  _delay_us = 10;
+  _delay_us = defaultDelay_us;
   _timeout_ms = defaultTimeout_ms;
 }
 
