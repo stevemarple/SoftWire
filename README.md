@@ -5,12 +5,11 @@ SoftWire is a software I2C implementation for Arduino and other
 Wiring-type environments. It utilises the `pinMode()`,
 `digitalWrite()` and `digitalRead()` functions. The pins to be used
 for serial data (SDA) and serial clock (SCL) control lines can be
-defined at run-time. Multiple instances are supported.
-Clock-stretching by slave devices is supported. Operations which loop
-(eg `startWait()`) or support clock-stretching include a timeout
-feature to prevent lockups by faulty or missing hardware. The
-microntroller must function as the master device, multiple masters are
-not supported.
+defined at run-time. Multiple instances are supported and
+clock-stretching by slave devices are supported. A timeout feature is
+included to prevent lockups by faulty or missing hardware. The
+microcontroller must function as the master device and multiple
+masters are not supported.
 
 
 License
