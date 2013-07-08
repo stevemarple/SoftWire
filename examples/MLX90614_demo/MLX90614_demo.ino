@@ -42,8 +42,6 @@ AsyncDelay samplingInterval;
 
 float convertToDegC(uint16_t data)
 {
-  Serial.print("  data = ");
-  Serial.println(data, HEX);
   // Remove MSB (error bit, ignored for temperatures)
   return (((data & (uint16_t)0x7FFF)) / 50) - 273.15;
 }
@@ -61,7 +59,7 @@ uint16_t readMLX90614(uint8_t command)
   digitalWrite(LED_BUILTIN, HIGH); delayMicroseconds(50);
   i2c.startWait(address, SoftWire::writeMode);
   i2c.rawWrite(command);
-    
+  
   // read
   i2c.repeatedStart(address, SoftWire::readMode);
   i2c.readThenAck(dataLow);  // Read 1 byte and then send ack
@@ -112,12 +110,13 @@ void loop(void)
 #endif
   
   Serial.print("Ambient: ");
-  Serial.println(convertToDegC(readMLX90614(cmdAmbient)));
-  Serial.print("Object 1: ");
-  Serial.println(convertToDegC(readMLX90614(cmdObject1)));
+  Serial.print(convertToDegC(readMLX90614(cmdAmbient)));
+  Serial.print("    Object 1: ");
+  Serial.print(convertToDegC(readMLX90614(cmdObject1)));
   // Uncomment lines below for dual FoV sensors
-  // Serial.print("Object 2: ");
-  // Serial.println(convertToDegC(readMLX90614(cmdObject2)));
+  // Serial.print("    Object 2: ");
+  // Serial.print(convertToDegC(readMLX90614(cmdObject2)));
+  Serial.println();
 #ifdef CALUNIUM
   digitalWrite(powerPin, LOW);
 #endif
