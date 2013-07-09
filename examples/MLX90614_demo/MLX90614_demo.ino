@@ -116,7 +116,7 @@ uint16_t readMLX90614(uint8_t command, uint8_t &crc)
 void setup(void)
 {
   Serial.begin(9600);
-  Serial.println("MLX90614 demo: " __FILE__);
+  Serial.println("MLX90614_demo");
 
   pinMode(LED_BUILTIN, OUTPUT);
   
