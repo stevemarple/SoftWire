@@ -40,21 +40,6 @@ SoftWire i2c(sdaPin, sclPin);
 AsyncDelay samplingInterval;
 
 
-
-uint8_t crc8_update(uint8_t crc, uint8_t data)
-{
-  const uint16_t polynomial = 0x107;
-  crc ^= data;
-  for (uint8_t i = 8; i; --i) {
-    if (crc & 0x80)
-      crc = (uint16_t(crc) << 1) ^ polynomial;
-    else
-      crc <<= 1;
-  }
-  
-  return crc;
-}
-
 float convertToDegC(uint16_t data)
 {
   // Remove MSB (error bit, ignored for temperatures)
@@ -95,13 +80,12 @@ uint16_t readMLX90614(uint8_t command, uint8_t &crc)
   digitalWrite(LED_BUILTIN, LOW);
 
   crc = 0;
-  crc = crc8_update(crc, address << 1); // Write address
-  crc = crc8_update(crc, command);
-  crc = crc8_update(crc, (address << 1) + 1); // Read address
-  crc = crc8_update(crc, dataLow);
-  crc = crc8_update(crc, dataHigh);
-  crc = crc8_update(pec, pec);
-  //Serial.print("      crc: "); Serial.println(crc, HEX);
+  crc = SoftWire::crc8_update(crc, address << 1); // Write address
+  crc = SoftWire::crc8_update(crc, command);
+  crc = SoftWire::crc8_update(crc, (address << 1) + 1); // Read address
+  crc = SoftWire::crc8_update(crc, dataLow);
+  crc = SoftWire::crc8_update(crc, dataHigh);
+  crc = SoftWire::crc8_update(pec, pec);
 
   if (errors) {
     crc = 0xFF;

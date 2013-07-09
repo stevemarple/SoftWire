@@ -27,6 +27,8 @@ public:
   static uint8_t readSda(const SoftWire *p);
   static uint8_t readScl(const SoftWire *p);
 
+  // SMBus uses CRC-8 for its PEC
+  static uint8_t crc8_update(uint8_t crc, uint8_t data);
   
   SoftWire(uint8_t sda, uint8_t scl);
   inline uint8_t getSda(void) const;  

@@ -55,6 +55,23 @@ uint8_t SoftWire::readScl(const SoftWire *p)
 }
 
 
+// For testing the CRC-8 calculator may be useful:
+// http://smbus.org/faq/crc8Applet.htm
+uint8_t SoftWire::crc8_update(uint8_t crc, uint8_t data)
+{
+  const uint16_t polynomial = 0x107;
+  crc ^= data;
+  for (uint8_t i = 8; i; --i) {
+    if (crc & 0x80)
+      crc = (uint16_t(crc) << 1) ^ polynomial;
+    else
+      crc <<= 1;
+  }
+  
+  return crc;
+}
+
+
 SoftWire::SoftWire(uint8_t sda, uint8_t scl) :
   _sda(sda),
   _scl(scl),
