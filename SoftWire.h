@@ -65,6 +65,11 @@ public:
   inline result_t readThenAck(uint8_t &data) const;
   inline result_t readThenNack(uint8_t &data) const;
 
+  inline void setSdaLow(void) const;
+  inline void setSdaHigh(void) const;
+  inline void setSclLow(void) const;
+  inline void setSclHigh(void) const;
+
 private:
   uint8_t _sda;
   uint8_t _scl;
@@ -166,6 +171,30 @@ SoftWire::result_t SoftWire::readThenAck(uint8_t &data) const
 SoftWire::result_t SoftWire::readThenNack(uint8_t &data) const
 {
   return read(data, false);
+}
+
+
+void SoftWire::setSdaLow(void) const
+{
+  _setSdaLow(this);
+}
+
+
+void SoftWire::setSdaHigh(void) const
+{
+  _setSdaHigh(this);
+}
+
+
+void SoftWire::setSclLow(void) const
+{
+  _setSclLow(this);
+}
+
+
+void SoftWire::setSclHigh(void) const
+{
+  _setSclHigh(this);
 }
 
 #endif
