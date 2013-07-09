@@ -40,34 +40,73 @@ SoftWire i2c(sdaPin, sclPin);
 AsyncDelay samplingInterval;
 
 
+
+uint8_t crc8_update(uint8_t crc, uint8_t data)
+{
+  const uint16_t polynomial = 0x107;
+  crc ^= data;
+  for (uint8_t i = 8; i; --i) {
+    if (crc & 0x80)
+      crc = (uint16_t(crc) << 1) ^ polynomial;
+    else
+      crc <<= 1;
+  }
+  
+  return crc;
+}
+
 float convertToDegC(uint16_t data)
 {
   // Remove MSB (error bit, ignored for temperatures)
-  return (((data & (uint16_t)0x7FFF)) / 50) - 273.15;
+  return (((data & (uint16_t)0x7FFF)) / 50.0) - 273.15;
 }
 
 
+// Switch from PWM mode (if it was enabled)
+void exitPWM(void)
+{
+  // Make SMBus request to force SMBus output instead of PWM
+  SoftWire::setSclLow(&i2c);
+  delay(3); // Must be > 1.44ms
+  SoftWire::setSclHigh(&i2c);
+  delay(2);
+}
 
 
-uint16_t readMLX90614(uint8_t command)
+uint16_t readMLX90614(uint8_t command, uint8_t &crc)
 {
   uint8_t address = 0x5A;
   uint8_t dataLow = 0;
   uint8_t dataHigh = 0;
   uint8_t pec = 0;
-  
+
+  uint8_t errors = 0;
   digitalWrite(LED_BUILTIN, HIGH); delayMicroseconds(50);
-  i2c.startWait(address, SoftWire::writeMode);
-  i2c.rawWrite(command);
+  // Send command
+  errors += i2c.startWait(address, SoftWire::writeMode);
+  errors += i2c.rawWrite(command);
   
-  // read
-  i2c.repeatedStart(address, SoftWire::readMode);
-  i2c.readThenAck(dataLow);  // Read 1 byte and then send ack
-  i2c.readThenAck(dataHigh); // Read 1 byte and then send ack
-  i2c.readThenNack(pec);
+  // Read results
+  errors += i2c.repeatedStart(address, SoftWire::readMode);
+  errors += i2c.readThenAck(dataLow);  // Read 1 byte and then send ack
+  errors += i2c.readThenAck(dataHigh); // Read 1 byte and then send ack
+  errors += i2c.readThenNack(pec);
   i2c.stop();
   digitalWrite(LED_BUILTIN, LOW);
 
+  crc = 0;
+  crc = crc8_update(crc, address << 1); // Write address
+  crc = crc8_update(crc, command);
+  crc = crc8_update(crc, (address << 1) + 1); // Read address
+  crc = crc8_update(crc, dataLow);
+  crc = crc8_update(crc, dataHigh);
+  crc = crc8_update(pec, pec);
+  //Serial.print("      crc: "); Serial.println(crc, HEX);
+
+  if (errors) {
+    crc = 0xFF;
+    return 0xFFFF;
+  }
   return (uint16_t(dataHigh) << 8) | dataLow;
 }
 
@@ -77,7 +116,7 @@ uint16_t readMLX90614(uint8_t command)
 void setup(void)
 {
   Serial.begin(9600);
-  Serial.println("MLX90614_demo");
+  Serial.println("MLX90614 demo: " __FILE__);
 
   pinMode(LED_BUILTIN, OUTPUT);
   
@@ -92,13 +131,15 @@ void setup(void)
 
   /*
    * Uncomment if needed. Not a good idea if power switched on/off
-   * since the sensor will be parastically powered from the SDA and
+   * since the sensor will be parasitically powered from the SDA and
    * SCL control lines.
   */
-  // i2c.enablePullups();
+  //i2c.enablePullups();
 
   i2c.setDelay_us(5);
   i2c.begin();
+  delay(300); // Data is available 0.25s after wakeup
+  exitPWM();
 }
 
 
@@ -106,19 +147,45 @@ void loop(void)
 {
 #ifdef CALUNIUM
   digitalWrite(powerPin, HIGH);
-  delay(1000);
+  delay(300); // Data available after 0.25s
+  exitPWM();
 #endif
-  
+
+  uint8_t crcAmbient;
+  uint16_t rawAmbient = readMLX90614(cmdAmbient, crcAmbient);
+  uint8_t crcObject1;
+  uint16_t rawObject1 = readMLX90614(cmdObject1, crcObject1);
+  // Uncomment lines below for dual FoV sensors
+  // uint8_t crcObject2;
+  // uint16_t rawObject2 = readMLX90614(cmdObject2, crcObject2);
+
   Serial.print("Ambient: ");
-  Serial.print(convertToDegC(readMLX90614(cmdAmbient)));
+  if (crcAmbient)
+    Serial.print("bus error");
+  else if (rawAmbient & 0x8000) 
+    Serial.print("read error");
+  else
+    Serial.print(convertToDegC(rawAmbient));
+
   Serial.print("    Object 1: ");
-  Serial.print(convertToDegC(readMLX90614(cmdObject1)));
+  if (crcObject1)
+    Serial.print("bus error");
+  else if (rawObject1 & 0x8000) 
+    Serial.print("read error");
+  else
+    Serial.print(convertToDegC(rawObject1));
+
   // Uncomment lines below for dual FoV sensors
   // Serial.print("    Object 2: ");
-  // Serial.print(convertToDegC(readMLX90614(cmdObject2)));
+  // if (rawObject2 & 0x8000) 
+  //   Serial.print("read error");
+  // else if (crcObject2)
+  //   Serial.print("bus error");
+  // else
+  //   Serial.print(convertToDegC(rawObject2));
   Serial.println();
 #ifdef CALUNIUM
   digitalWrite(powerPin, LOW);
 #endif
-  delay(2000);
+  delay(1000);
 }
