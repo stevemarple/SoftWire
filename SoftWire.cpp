@@ -1,40 +1,103 @@
+#include <util/atomic.h>
 #include <SoftWire.h>
 #include <AsyncDelay.h>
 
-SoftWire::SoftWire(uint8_t sda, uint8_t scl)
+
+// Force SDA low
+void SoftWire::setSdaLow(const SoftWire *p)
 {
-  _sda = sda;
-  _scl = scl;
-  _inputMode = INPUT; // Pullups disabled by default
-  _delay_us = defaultDelay_us;
-  _timeout_ms = defaultTimeout_ms;
+  uint8_t sda = p->getSda();
+  // Disable interrupts whilst switching pin direction
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    pinMode(sda, OUTPUT);
+    digitalWrite(sda, LOW);
+  }
+}
+
+
+// Release SDA to float high
+void SoftWire::setSdaHigh(const SoftWire *p)
+{
+  pinMode(p->getSda(), p->getInputMode());
+}
+
+
+// Force SCL low
+void SoftWire::setSclLow(const SoftWire *p)
+{
+  uint8_t scl = p->getScl();
+  // Disable interrupts whilst switching pin direction
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    pinMode(scl, OUTPUT);
+    digitalWrite(scl, LOW);
+  }
+}
+
+
+// Release SCL to float high
+void SoftWire::setSclHigh(const SoftWire *p)
+{
+  pinMode(p->getScl(), p->getInputMode());
+}
+
+
+// Read SDA (for data read)
+uint8_t SoftWire::readSda(const SoftWire *p)
+{
+  return digitalRead(p->getSda());
+}
+
+
+// Read SCL (to detect clock-stretching)
+uint8_t SoftWire::readScl(const SoftWire *p)
+{
+  return digitalRead(p->getScl());
+}
+
+
+SoftWire::SoftWire(uint8_t sda, uint8_t scl) :
+  _sda(sda),
+  _scl(scl),
+  _inputMode(INPUT), // Pullups diabled by default
+  _delay_us(defaultDelay_us),
+  _timeout_ms(defaultTimeout_ms),
+  _setSdaLow(setSdaLow),
+  _setSdaHigh(setSdaHigh),
+  _setSclLow(setSclLow),
+  _setSclHigh(setSclHigh),
+  _readSda(readSda),
+  _readScl(readScl)
+{
+  ;
 }
 
 void SoftWire::begin(void) const
 {
+  /*
   // Release SDA and SCL
-  pinMode(_sda, _inputMode);
-  pinMode(_scl, _inputMode);
+  _setSdaHigh(this);
+  delayMicroseconds(_delay_us);
+  _setSclHigh(this);
+  */
+  stop();
 }
 
 void SoftWire::stop(void) const
 {
   // Force SCL low
-  pinMode(_scl, OUTPUT);
-  digitalWrite(_scl, LOW);
+  _setSclLow(this);
   delayMicroseconds(_delay_us);
   
   // Force SDA low
-  pinMode(_sda, OUTPUT);
-  digitalWrite(_sda, LOW);
+  _setSdaLow(this);
   delayMicroseconds(_delay_us);
 
   // Release SCL
-  pinMode(_scl, _inputMode);
+  _setSclHigh(this);
   delayMicroseconds(_delay_us);
 
   // Release SDA
-  pinMode(_sda, _inputMode);
+  _setSdaHigh(this);
   delayMicroseconds(_delay_us);
 }
 
@@ -42,13 +105,11 @@ SoftWire::result_t SoftWire::start(uint8_t rawAddr) const
 {
   
   // Force SDA low
-  pinMode(_sda, OUTPUT);
-  digitalWrite(_sda, LOW);
+  _setSdaLow(this);
   delayMicroseconds(_delay_us);
     
   // Force SCL low
-  pinMode(_scl, OUTPUT);
-  digitalWrite(_scl, LOW);
+  _setSclLow(this);
   delayMicroseconds(_delay_us);
   return rawWrite(rawAddr);
 }
@@ -57,21 +118,19 @@ SoftWire::result_t SoftWire::start(uint8_t rawAddr) const
 SoftWire::result_t SoftWire::repeatedStart(uint8_t rawAddr) const
 {
   // Force SCL low
-  pinMode(_scl, OUTPUT);
-  digitalWrite(_scl, LOW);
+  _setSclLow(this);
   delayMicroseconds(_delay_us);
 
   // Release SDA
-  pinMode(_sda, _inputMode);
+  _setSdaHigh(this);
   delayMicroseconds(_delay_us);
 
   // Release SCL
-  pinMode(_scl, _inputMode);
+  _setSclHigh(this);
   delayMicroseconds(_delay_us);
 
   // Force SDA low
-  pinMode(_sda, OUTPUT);
-  digitalWrite(_sda, LOW);
+  _setSdaLow(this);
   delayMicroseconds(_delay_us);
 
   return rawWrite(rawAddr);
@@ -84,8 +143,7 @@ SoftWire::result_t SoftWire::startWait(uint8_t rawAddr) const
 
   while (!timeout.isExpired()) {
     // Force SDA low
-    pinMode(_sda, OUTPUT);
-    digitalWrite(_sda, LOW);
+    _setSdaLow(this);
     delayMicroseconds(_delay_us);
     
     switch (rawWrite(rawAddr)) {
@@ -108,23 +166,20 @@ SoftWire::result_t SoftWire::rawWrite(uint8_t data) const
   AsyncDelay timeout(_timeout_ms, AsyncDelay::MILLIS);
   for (uint8_t i = 8; i; --i) {
     // Force SCL low
-    pinMode(_scl, OUTPUT);
-    digitalWrite(_scl, LOW);
+    _setSclLow(this);
     
     if (data & 0x80) {
       // Release SDA
-      pinMode(_sda, _inputMode);
-      //digitalWrite(_sda, LOW); // To keep timing symmetrical
+      _setSdaHigh(this);
     }
     else {
       // Force SDA low
-      pinMode(_sda, OUTPUT);
-      digitalWrite(_sda, LOW);
+      _setSdaLow(this);
     }
     delayMicroseconds(_delay_us);
 
     // Release SCL
-    pinMode(_scl, _inputMode);
+    _setSclHigh(this);
 
     delayMicroseconds(_delay_us);
   
@@ -137,25 +192,24 @@ SoftWire::result_t SoftWire::rawWrite(uint8_t data) const
 
   // Get ACK
   // Force SCL low
-  pinMode(_scl, OUTPUT);
-  digitalWrite(_scl, LOW);
+  _setSclLow(this);
 
   // Release SDA
-  pinMode(_sda, _inputMode);
+  _setSdaHigh(this);
   
   delayMicroseconds(_delay_us);
 
   // Release SCL
-  pinMode(_scl, _inputMode);
+  _setSclHigh(this);
 
   // Wait for SCL to be set high (in case wait states are inserted)
-  while (digitalRead(_scl) == LOW)
+  while (_readScl(this) == LOW)
     if (timeout.isExpired()) {
       stop(); // Reset bus
       return timedOut;
     }
 
-  return (digitalRead(_sda) == LOW ? ack : nack);
+  return (_readSda(this) == LOW ? ack : nack);
 }
 
 
@@ -168,51 +222,49 @@ SoftWire::result_t SoftWire::read(uint8_t &data, bool sendAck) const
     data <<= 1;
 
     // Force SCL low
-    pinMode(_scl, OUTPUT);
-    digitalWrite(_scl, LOW);
+    _setSclLow(this);
     
     // Release SDA (from previous ACK)
-    pinMode(_sda, _inputMode);
+    _setSdaHigh(this);
     delayMicroseconds(_delay_us);
     
     // Release SCL
-    pinMode(_scl, _inputMode);
+    _setSclHigh(this);
     delayMicroseconds(_delay_us);
     
     // Read clock stretch
-    while (digitalRead(_scl) == LOW)
+    while (_readScl(this) == LOW)
       if (timeout.isExpired()) {
 	stop(); // Reset bus
 	return timedOut;
       }
     
-    if (digitalRead(_sda) & 1)
+    if (_readSda(this))
       data |= 1;
   }
 
+  
   // Put ACK/NACK
 
   // Force SCL low
-  pinMode(_scl, OUTPUT);
-  digitalWrite(_scl, LOW);
+  _setSclLow(this);
   if (sendAck) {
     // Force SDA low
-    pinMode(_sda, OUTPUT);
-    digitalWrite(_sda, LOW);
+    _setSdaLow(this);
   }
   else {
     // Release SDA
-    pinMode(_sda, _inputMode);
+    _setSdaHigh(this);
   }
 
   delayMicroseconds(_delay_us);
   
   // Release SCL
-  pinMode(_scl, _inputMode);
+  _setSclHigh(this);
   delayMicroseconds(_delay_us);
   
   // Wait for SCL to return high
-  while (digitalRead(_scl) == LOW)
+  while (_readScl(this) == LOW)
     if (timeout.isExpired()) {
       stop(); // Reset bus
       return timedOut;

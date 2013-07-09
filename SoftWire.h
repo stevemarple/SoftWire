@@ -19,13 +19,22 @@ public:
 
   static const uint8_t defaultDelay_us = 10;
   static const uint16_t defaultTimeout_ms = 100;
+
+  static void setSdaLow(const SoftWire *p);
+  static void setSdaHigh(const SoftWire *p);
+  static void setSclLow(const SoftWire *p);
+  static void setSclHigh(const SoftWire *p);
+  static uint8_t readSda(const SoftWire *p);
+  static uint8_t readScl(const SoftWire *p);
+
   
   SoftWire(uint8_t sda, uint8_t scl);
   inline uint8_t getSda(void) const;  
   inline uint8_t getScl(void) const;
   inline uint8_t getDelay_us(void) const;
   inline uint16_t getTimeout_ms(void) const;
-
+  inline uint8_t getInputMode(void) const;
+  
   // begin() must be called after any changes are made to SDA and/or
   // SCL pins.
   inline void setSda(uint8_t sda); 
@@ -51,8 +60,8 @@ public:
   
   result_t rawWrite(uint8_t data) const;
   result_t read(uint8_t &data, bool sendAck = true) const;
-  inline uint8_t readThenAck(uint8_t &data) const;
-  inline uint8_t readThenNack(uint8_t &data) const;
+  inline result_t readThenAck(uint8_t &data) const;
+  inline result_t readThenNack(uint8_t &data) const;
 
 private:
   uint8_t _sda;
@@ -61,6 +70,12 @@ private:
   uint8_t _delay_us;
   uint16_t _timeout_ms;
 
+  void (*_setSdaLow)(const SoftWire *p);
+  void (*_setSdaHigh)(const SoftWire *p);
+  void (*_setSclLow)(const SoftWire *p);
+  void (*_setSclHigh)(const SoftWire *p);
+  uint8_t (*_readSda)(const SoftWire *p);
+  uint8_t (*_readScl)(const SoftWire *p);
 };
 
 
@@ -86,6 +101,10 @@ uint16_t SoftWire::getTimeout_ms(void) const
   return _timeout_ms;
 }
 
+uint8_t SoftWire::getInputMode(void) const
+{
+  return _inputMode;
+}
 
 void SoftWire::setSda(uint8_t sda)
 {
@@ -136,16 +155,15 @@ SoftWire::result_t SoftWire::startWait(uint8_t addr, mode_t rwMode) const
 }
 
 
-uint8_t SoftWire::readThenAck(uint8_t &data) const
+SoftWire::result_t SoftWire::readThenAck(uint8_t &data) const
 {
   return read(data, true);
 }
 
 
-uint8_t SoftWire::readThenNack(uint8_t &data) const
+SoftWire::result_t SoftWire::readThenNack(uint8_t &data) const
 {
   return read(data, false);
 }
-
 
 #endif
