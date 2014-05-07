@@ -50,17 +50,27 @@ public:
   // to the SDA and/or SCL pins.
   void begin(void) const;
 
-  
+
+  // Functions which take raw addresses (ie address passed must
+  // already indicate read/write mode)
+  result_t llStart(uint8_t rawAddr) const;
+  result_t llRepeatedStart(uint8_t rawAddr) const;
+  result_t llStartWait(uint8_t rawAddr) const;
+
   void stop(void) const;
-  result_t start(uint8_t rawAddr) const;
-  result_t repeatedStart(uint8_t rawAddr) const;
-  result_t startWait(uint8_t rawAddr) const;
+
+  inline result_t startRead(uint8_t addr) const;
+  inline result_t startWrite(uint8_t addr) const;
+  inline result_t repeatedStartRead(uint8_t addr) const;
+  inline result_t repeatedStartWrite(uint8_t addr) const;
+  inline result_t startReadWait(uint8_t addr) const;
+  inline result_t startWriteWait(uint8_t addr) const;
 
   inline result_t start(uint8_t addr, mode_t rwMode) const;
-  inline result_t repeatedStart(uint8_t rawAddr, mode_t rwMode) const;
-  inline result_t startWait(uint8_t rawAddr, mode_t rwMode) const;
+  inline result_t repeatedStart(uint8_t addr, mode_t rwMode) const;
+  inline result_t startWait(uint8_t addr, mode_t rwMode) const;
   
-  result_t rawWrite(uint8_t data) const;
+  result_t write(uint8_t data) const;
   result_t read(uint8_t &data, bool sendAck = true) const;
   inline result_t readThenAck(uint8_t &data) const;
   inline result_t readThenNack(uint8_t &data) const;
@@ -70,6 +80,8 @@ public:
   inline void setSclLow(void) const;
   inline void setSclHigh(void) const;
 
+
+  
 private:
   uint8_t _sda;
   uint8_t _scl;
@@ -143,22 +155,57 @@ void SoftWire::setTimeout_ms(uint16_t timeout_ms)
 }
 
 
+SoftWire::result_t SoftWire::startRead(uint8_t addr) const
+{
+  return llStart((addr << 1) + readMode);
+}
+
+
+SoftWire::result_t SoftWire::startWrite(uint8_t addr) const
+{
+  return llStart((addr << 1) + writeMode);
+}
+
+
+SoftWire::result_t SoftWire::repeatedStartRead(uint8_t addr) const
+{
+  return llRepeatedStart((addr << 1) + readMode);
+}
+
+
+SoftWire::result_t SoftWire::repeatedStartWrite(uint8_t addr) const
+{
+  return llRepeatedStart((addr << 1) + writeMode);
+}
+
+
+SoftWire::result_t SoftWire::startReadWait(uint8_t addr) const
+{
+  return llStartWait((addr << 1) + readMode);
+}
+
+
+SoftWire::result_t SoftWire::startWriteWait(uint8_t addr) const
+{
+  return llStartWait((addr << 1) + writeMode);
+}
+
 
 SoftWire::result_t SoftWire::start(uint8_t addr, mode_t rwMode) const
 {
-  return start((addr << 1) + rwMode);
+  return llStart((addr << 1) + rwMode);
 }
 
 
 SoftWire::result_t SoftWire::repeatedStart(uint8_t addr, mode_t rwMode) const
 {
-  return repeatedStart((addr << 1) + rwMode);
+  return llRepeatedStart((addr << 1) + rwMode);
 }
 
 
 SoftWire::result_t SoftWire::startWait(uint8_t addr, mode_t rwMode) const
 {
-  return startWait((addr << 1) + rwMode);
+  return llStartWait((addr << 1) + rwMode);
 }
 
 

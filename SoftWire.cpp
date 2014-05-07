@@ -118,7 +118,7 @@ void SoftWire::stop(void) const
   delayMicroseconds(_delay_us);
 }
 
-SoftWire::result_t SoftWire::start(uint8_t rawAddr) const
+SoftWire::result_t SoftWire::llStart(uint8_t rawAddr) const
 {
   
   // Force SDA low
@@ -128,11 +128,11 @@ SoftWire::result_t SoftWire::start(uint8_t rawAddr) const
   // Force SCL low
   _setSclLow(this);
   delayMicroseconds(_delay_us);
-  return rawWrite(rawAddr);
+  return write(rawAddr);
 }
 
 
-SoftWire::result_t SoftWire::repeatedStart(uint8_t rawAddr) const
+SoftWire::result_t SoftWire::llRepeatedStart(uint8_t rawAddr) const
 {
   // Force SCL low
   _setSclLow(this);
@@ -150,11 +150,11 @@ SoftWire::result_t SoftWire::repeatedStart(uint8_t rawAddr) const
   _setSdaLow(this);
   delayMicroseconds(_delay_us);
 
-  return rawWrite(rawAddr);
+  return write(rawAddr);
 }
 
 
-SoftWire::result_t SoftWire::startWait(uint8_t rawAddr) const
+SoftWire::result_t SoftWire::llStartWait(uint8_t rawAddr) const
 {
   AsyncDelay timeout(_timeout_ms, AsyncDelay::MILLIS);
 
@@ -163,7 +163,7 @@ SoftWire::result_t SoftWire::startWait(uint8_t rawAddr) const
     _setSdaLow(this);
     delayMicroseconds(_delay_us);
     
-    switch (rawWrite(rawAddr)) {
+    switch (write(rawAddr)) {
     case ack:
       return ack;
     case nack:
@@ -178,7 +178,7 @@ SoftWire::result_t SoftWire::startWait(uint8_t rawAddr) const
 }
 
   
-SoftWire::result_t SoftWire::rawWrite(uint8_t data) const
+SoftWire::result_t SoftWire::write(uint8_t data) const
 {
   AsyncDelay timeout(_timeout_ms, AsyncDelay::MILLIS);
   for (uint8_t i = 8; i; --i) {
