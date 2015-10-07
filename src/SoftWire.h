@@ -1,7 +1,9 @@
 #ifndef SOFTWIRE_H
 #define SOFTWIRE_H
-#include <Arduino.h>
 
+#define SOFTWIRE_VERSION "0.1.0"
+
+#include <Arduino.h>
 #include <stdint.h>
 
 class SoftWire {
