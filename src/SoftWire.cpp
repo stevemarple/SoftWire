@@ -9,7 +9,6 @@
 #endif
 
 #include <SoftWire.h>
-#include <AsyncDelay.h>
 
 
 // Force SDA low
@@ -114,8 +113,10 @@ void SoftWire::begin(void) const
 	stop();
 }
 
-void SoftWire::stop(void) const
+SoftWire::result_t SoftWire::stop(void) const
 {
+	AsyncDelay timeout(_timeout_ms, AsyncDelay::MILLIS);
+
 	// Force SCL low
 	_setSclLow(this);
 	delayMicroseconds(_delay_us);
@@ -125,12 +126,15 @@ void SoftWire::stop(void) const
 	delayMicroseconds(_delay_us);
 
 	// Release SCL
-	_setSclHigh(this);
+	if (!setSclHighAndStretch(timeout))
+		return timedOut;
 	delayMicroseconds(_delay_us);
 
 	// Release SDA
 	_setSdaHigh(this);
 	delayMicroseconds(_delay_us);
+
+	return ack;
 }
 
 SoftWire::result_t SoftWire::llStart(uint8_t rawAddr) const
@@ -149,6 +153,8 @@ SoftWire::result_t SoftWire::llStart(uint8_t rawAddr) const
 
 SoftWire::result_t SoftWire::llRepeatedStart(uint8_t rawAddr) const
 {
+	AsyncDelay timeout(_timeout_ms, AsyncDelay::MILLIS);
+
 	// Force SCL low
 	_setSclLow(this);
 	delayMicroseconds(_delay_us);
@@ -158,7 +164,8 @@ SoftWire::result_t SoftWire::llRepeatedStart(uint8_t rawAddr) const
 	delayMicroseconds(_delay_us);
 
 	// Release SCL
-	_setSclHigh(this);
+	if (!setSclHighAndStretch(timeout))
+		return timedOut;
 	delayMicroseconds(_delay_us);
 
 	// Force SDA low
@@ -211,7 +218,8 @@ SoftWire::result_t SoftWire::write(uint8_t data) const
 		delayMicroseconds(_delay_us);
 
 		// Release SCL
-		_setSclHigh(this);
+		if (!setSclHighAndStretch(timeout))
+			return timedOut;
 
 		delayMicroseconds(_delay_us);
 
@@ -232,14 +240,8 @@ SoftWire::result_t SoftWire::write(uint8_t data) const
 	delayMicroseconds(_delay_us);
 
 	// Release SCL
-	_setSclHigh(this);
-
-	// Wait for SCL to be set high (in case wait states are inserted)
-	while (_readScl(this) == LOW)
-		if (timeout.isExpired()) {
-			stop(); // Reset bus
-			return timedOut;
-		}
+	if (!setSclHighAndStretch(timeout))
+		return timedOut;
 
 	result_t res = (_readSda(this) == LOW ? ack : nack);
 
@@ -268,7 +270,8 @@ SoftWire::result_t SoftWire::read(uint8_t &data, bool sendAck) const
 		delayMicroseconds(_delay_us);
 
 		// Release SCL
-		_setSclHigh(this);
+		if (!setSclHighAndStretch(timeout))
+			return timedOut;
 		delayMicroseconds(_delay_us);
 
 		// Read clock stretch
@@ -299,7 +302,8 @@ SoftWire::result_t SoftWire::read(uint8_t &data, bool sendAck) const
 	delayMicroseconds(_delay_us);
 
 	// Release SCL
-	_setSclHigh(this);
+	if (!setSclHighAndStretch(timeout))
+		return timedOut;
 	delayMicroseconds(_delay_us);
 
 	// Wait for SCL to return high
