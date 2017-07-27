@@ -5,6 +5,7 @@
 
 #include <Arduino.h>
 #include <stdint.h>
+#include <AsyncDelay.h>
 
 class SoftWire {
 public:
@@ -59,7 +60,7 @@ public:
 	result_t llRepeatedStart(uint8_t rawAddr) const;
 	result_t llStartWait(uint8_t rawAddr) const;
 
-	void stop(void) const;
+	result_t stop(void) const;
 
 	inline result_t startRead(uint8_t addr) const;
 	inline result_t startWrite(uint8_t addr) const;
@@ -81,6 +82,7 @@ public:
 	inline void setSdaHigh(void) const;
 	inline void setSclLow(void) const;
 	inline void setSclHigh(void) const;
+	inline bool setSclHighAndStretch(AsyncDelay& timeout) const;
 
 
 
@@ -245,6 +247,21 @@ void SoftWire::setSclLow(void) const
 void SoftWire::setSclHigh(void) const
 {
 	_setSclHigh(this);
+}
+
+bool SoftWire::setSclHighAndStretch(AsyncDelay& timeout) const
+{
+	_setSclHigh(this);
+
+	// Wait for SCL to actually become high in case the slave keeps
+	// it low (clock stretching).
+	while (_readScl(this) == LOW)
+		if (timeout.isExpired()) {
+			stop(); // Reset bus
+			return false;
+		}
+
+	return true;
 }
 
 #endif
