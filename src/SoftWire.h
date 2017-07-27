@@ -91,6 +91,7 @@ private:
   uint8_t _delay_us;
   uint16_t _timeout_ms;
 
+public:
   void (*_setSdaLow)(const SoftWire *p);
   void (*_setSdaHigh)(const SoftWire *p);
   void (*_setSclLow)(const SoftWire *p);
