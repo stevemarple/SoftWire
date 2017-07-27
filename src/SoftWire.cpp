@@ -9,8 +9,8 @@ void SoftWire::setSdaLow(const SoftWire *p)
   uint8_t sda = p->getSda();
   // Disable interrupts whilst switching pin direction
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-    pinMode(sda, OUTPUT);
     digitalWrite(sda, LOW);
+    pinMode(sda, OUTPUT);
   }
 }
 
@@ -28,8 +28,8 @@ void SoftWire::setSclLow(const SoftWire *p)
   uint8_t scl = p->getScl();
   // Disable interrupts whilst switching pin direction
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-    pinMode(scl, OUTPUT);
     digitalWrite(scl, LOW);
+    pinMode(scl, OUTPUT);
   }
 }
 
