@@ -226,7 +226,14 @@ SoftWire::result_t SoftWire::write(uint8_t data) const
       return timedOut;
     }
 
-  return (_readSda(this) == LOW ? ack : nack);
+  result_t res = (_readSda(this) == LOW ? ack : nack);
+
+  delayMicroseconds(_delay_us);
+
+  // Keep SCL low between bytes
+  _setSclLow(this);
+
+  return res;
 }
 
 
@@ -288,5 +295,9 @@ SoftWire::result_t SoftWire::read(uint8_t &data, bool sendAck) const
     }
   
   delayMicroseconds(_delay_us);
+
+  // Keep SCL low between bytes
+  _setSclLow(this);
+
   return ack;
 }
