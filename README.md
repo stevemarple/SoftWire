@@ -30,6 +30,11 @@ Requirements
 The AsyncDelay library is required, see
 https://github.com/stevemarple/AsyncDelay
 
+Contributors
+------------
+
+Steve Marple
+Matthijs Kooijman
 
 Credits
 -------
