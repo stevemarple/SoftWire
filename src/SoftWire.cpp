@@ -1,4 +1,3 @@
-#include <util/atomic.h>
 #include <SoftWire.h>
 #include <AsyncDelay.h>
 
@@ -8,10 +7,10 @@ void SoftWire::setSdaLow(const SoftWire *p)
 {
   uint8_t sda = p->getSda();
   // Disable interrupts whilst switching pin direction
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-    digitalWrite(sda, LOW);
-    pinMode(sda, OUTPUT);
-  }
+  noInterrupts();
+  digitalWrite(sda, LOW);
+  pinMode(sda, OUTPUT);
+  interrupts();
 }
 
 
@@ -27,10 +26,10 @@ void SoftWire::setSclLow(const SoftWire *p)
 {
   uint8_t scl = p->getScl();
   // Disable interrupts whilst switching pin direction
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-    digitalWrite(scl, LOW);
-    pinMode(scl, OUTPUT);
-  }
+  noInterrupts();
+  digitalWrite(scl, LOW);
+  pinMode(scl, OUTPUT);
+  interrupts();
 }
 
 
