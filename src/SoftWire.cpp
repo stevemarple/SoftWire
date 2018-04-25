@@ -1,4 +1,13 @@
+// If possible disable interrupts whilst switching pin direction. Sadly
+// there is no generic Arduino function to read the current interrupt
+// status, only to enable and disable interrupts.  As a result the
+// protection against spurious signals on the I2C bus is only available
+// for AVR architectures where ATOMIC_BLOCK is defined.
+
+#if defined(ARDUINO_ARCH_AVR)
 #include <util/atomic.h>
+#endif
+
 #include <SoftWire.h>
 #include <AsyncDelay.h>
 
@@ -7,8 +16,11 @@
 void SoftWire::setSdaLow(const SoftWire *p)
 {
 	uint8_t sda = p->getSda();
-	// Disable interrupts whilst switching pin direction
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+
+#ifdef ATOMIC_BLOCK
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+#endif
+	{
 		digitalWrite(sda, LOW);
 		pinMode(sda, OUTPUT);
 	}
@@ -26,8 +38,11 @@ void SoftWire::setSdaHigh(const SoftWire *p)
 void SoftWire::setSclLow(const SoftWire *p)
 {
 	uint8_t scl = p->getScl();
-	// Disable interrupts whilst switching pin direction
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+
+#ifdef ATOMIC_BLOCK
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+#endif
+	{
 		digitalWrite(scl, LOW);
 		pinMode(scl, OUTPUT);
 	}
