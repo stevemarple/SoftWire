@@ -1,7 +1,7 @@
 #ifndef SOFTWIRE_H
 #define SOFTWIRE_H
 
-#define SOFTWIRE_VERSION "1.0.4"
+#define SOFTWIRE_VERSION "1.1.0"
 
 #include <Arduino.h>
 #include <stdint.h>
