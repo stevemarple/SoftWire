@@ -23,9 +23,13 @@
 uint8_t sdaPin = 16; // JTAG TDI
 uint8_t sclPin = 19; // JTAG TCK
 uint8_t powerPin = 18;
-#else
+#elif defined(ARDUINO_ARCH_AVR)
 uint8_t sdaPin = A4;
 uint8_t sclPin = A5;
+#else
+// Adjust to suit your non-AVR architecture
+uint8_t sdaPin = 0;
+uint8_t sclPin = 1;
 #endif
 
 const uint8_t cmdAmbient = 6;
