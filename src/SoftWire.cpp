@@ -364,7 +364,7 @@ size_t SoftWire::write(const uint8_t *data, size_t quantity)
 int SoftWire::read(void)
 {
     if (_rxBufferIndex < _rxBufferBytesRead)
-        return _rxBuffer[++_rxBufferIndex];
+        return _rxBuffer[_rxBufferIndex++];
     else
         return -1;
 }
