@@ -5,7 +5,12 @@ SoftWire sw(SDA, SCL);
 
 void setup(void)
 {
+#if F_CPU >= 12000000UL
+    Serial.begin(115200);
+#else
 	Serial.begin(9600);
+#endif
+
 	sw.setTimeout_ms(40);
 	sw.begin();
 
@@ -26,7 +31,7 @@ void setup(void)
 
 	for (uint8_t addr = firstAddr; addr <= lastAddr; addr++) {
 		digitalWrite(LED_BUILTIN, HIGH);
-		delayMicroseconds(10);
+		delayMicroseconds(50);
 
 		uint8_t startResult = sw.llStart((addr << 1) + 1); // Signal a read
 		sw.stop();

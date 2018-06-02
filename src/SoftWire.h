@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <AsyncDelay.h>
 
-class SoftWire {
+class SoftWire : public Stream {
 public:
 	enum result_t {
 		ack = 0,
@@ -53,7 +53,6 @@ public:
 	// to the SDA and/or SCL pins.
 	void begin(void) const;
 
-
 	// Functions which take raw addresses (ie address passed must
 	// already indicate read/write mode)
 	result_t llStart(uint8_t rawAddr) const;
@@ -73,8 +72,8 @@ public:
 	inline result_t repeatedStart(uint8_t addr, mode_t rwMode) const;
 	inline result_t startWait(uint8_t addr, mode_t rwMode) const;
 
-	result_t write(uint8_t data) const;
-	result_t read(uint8_t &data, bool sendAck = true) const;
+	result_t llWrite(uint8_t data) const;
+	result_t llRead(uint8_t &data, bool sendAck = true) const;
 	inline result_t readThenAck(uint8_t &data) const;
 	inline result_t readThenNack(uint8_t &data) const;
 
@@ -85,6 +84,46 @@ public:
 	inline bool setSclHighAndStretch(AsyncDelay& timeout) const;
 
 
+    inline void setRxBuffer(void *rxBuffer, uint8_t rxBufferSize) {
+        _rxBuffer = (uint8_t*)rxBuffer;
+        _rxBufferSize = rxBufferSize;
+        _rxBufferIndex = 0;
+        _rxBufferBytesRead = 0;
+    }
+
+    inline void setTxBuffer(void *txBuffer, uint8_t txBufferSize) {
+        _txBuffer = (uint8_t*)txBuffer;
+        _txBufferSize = txBufferSize;
+        _txBufferIndex = 0;
+    }
+
+    // Wrapper functions to provide direct compatibility with the Wire library (TwoWire class)
+    virtual int available(void);
+    virtual size_t write(uint8_t data);
+    virtual size_t write(const uint8_t *data, size_t quantity);
+    virtual int read(void);
+    virtual int peek(void);
+    inline virtual void flush (void) {
+        // TODO: (to be implemented in Wire)
+    }
+
+	void end(void);
+	void setClock(uint32_t frequency); // Approximate frequency in Hz
+    void beginTransmission(uint8_t address);
+    inline void beginTransmission(int address) {
+        beginTransmission((uint8_t)address);
+    }
+
+    uint8_t endTransmission(uint8_t);
+    uint8_t endTransmission(void) {
+        return endTransmission(true);
+    }
+
+
+    uint8_t requestFrom(uint8_t address, uint8_t quantity, uint8_t sendStop = true);
+    inline uint8_t requestFrom(int address, int quantity, int sendStop = true) {
+        return requestFrom((uint8_t)address, (uint8_t)quantity, (uint8_t)sendStop);
+    }
 
 private:
 	uint8_t _sda;
@@ -92,6 +131,19 @@ private:
 	uint8_t _inputMode;
 	uint8_t _delay_us;
 	uint16_t _timeout_ms;
+
+	// Additional member variables to support compatibility with Wire library
+	uint8_t *_rxBuffer;
+	uint8_t _rxBufferSize;
+	uint8_t _rxBufferIndex;
+	uint8_t _rxBufferBytesRead;
+
+	uint8_t _txAddress; // The address where data is to be sent to
+	uint8_t *_txBuffer; // Address of user-supplied buffer
+	uint8_t _txBufferSize; // Size of user-supplied buffer
+	//uint8_t _txBufferLength; // Length of data the user tried to send
+	uint8_t _txBufferIndex; // Index into buffer
+
 
 public:
 	void (*_setSdaLow)(const SoftWire *p);
@@ -216,13 +268,13 @@ SoftWire::result_t SoftWire::startWait(uint8_t addr, mode_t rwMode) const
 
 SoftWire::result_t SoftWire::readThenAck(uint8_t &data) const
 {
-	return read(data, true);
+	return llRead(data, true);
 }
 
 
 SoftWire::result_t SoftWire::readThenNack(uint8_t &data) const
 {
-	return read(data, false);
+	return llRead(data, false);
 }
 
 
