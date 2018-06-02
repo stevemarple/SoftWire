@@ -409,6 +409,14 @@ void SoftWire::beginTransmission(uint8_t address)
 
 uint8_t SoftWire::endTransmission(uint8_t sendStop)
 {
+    uint8_t r = endTransmissionInner();
+    if (sendStop)
+        stop();
+    return r;
+}
+
+uint8_t SoftWire::endTransmissionInner(void) const
+{
     // TODO: Consider repeated start conditions
     result_t r = start(_txAddress, writeMode);
     if (r == nack)
@@ -424,26 +432,32 @@ uint8_t SoftWire::endTransmission(uint8_t sendStop)
             return 4;
     }
 
-    if (sendStop)
-        stop();
     return 0;
 }
 
 
+
+
 uint8_t SoftWire::requestFrom(uint8_t address, uint8_t quantity, uint8_t sendStop)
 {
+    _rxBufferIndex = 0;
     _rxBufferBytesRead = 0;
     if (start(address, readMode) == 0) {
         for (uint8_t i = 0; i < quantity; ++i) {
-            if (llRead(_rxBuffer[i], i != quantity - 1))
+            if (i >= _rxBufferSize)
+                break; // Don't write beyond buffer
+            result_t res = llRead(_rxBuffer[i], i != (quantity - 1));
+            if (res != ack)
                 break;
+
             ++_rxBufferBytesRead;
         }
     }
 
     if (sendStop)
         stop();
-    return _rxBufferIndex;
+
+    return _rxBufferBytesRead;
 }
 
 

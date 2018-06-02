@@ -174,6 +174,9 @@ private:
 	void (*_sclHigh)(const SoftWire *p);
 	uint8_t (*_readSda)(const SoftWire *p);
 	uint8_t (*_readScl)(const SoftWire *p);
+
+
+	uint8_t endTransmissionInner(void) const;
 };
 
 
