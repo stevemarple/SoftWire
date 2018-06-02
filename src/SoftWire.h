@@ -23,10 +23,10 @@ public:
 	static const uint8_t defaultDelay_us = 10;
 	static const uint16_t defaultTimeout_ms = 100;
 
-	static void setSdaLow(const SoftWire *p);
-	static void setSdaHigh(const SoftWire *p);
-	static void setSclLow(const SoftWire *p);
-	static void setSclHigh(const SoftWire *p);
+	static void sdaLow(const SoftWire *p);
+	static void sdaHigh(const SoftWire *p);
+	static void sclLow(const SoftWire *p);
+	static void sclHigh(const SoftWire *p);
 	static uint8_t readSda(const SoftWire *p);
 	static uint8_t readScl(const SoftWire *p);
 
@@ -52,6 +52,7 @@ public:
 	// begin() must be called before use, and after any changes are made
 	// to the SDA and/or SCL pins.
 	void begin(void) const;
+    void end(void); // Restore pins to inputs
 
 	// Functions which take raw addresses (ie address passed must
 	// already indicate read/write mode)
@@ -77,24 +78,33 @@ public:
 	inline result_t readThenAck(uint8_t &data) const;
 	inline result_t readThenNack(uint8_t &data) const;
 
-	inline void setSdaLow(void) const;
-	inline void setSdaHigh(void) const;
-	inline void setSclLow(void) const;
-	inline void setSclHigh(void) const;
-	inline bool setSclHighAndStretch(AsyncDelay& timeout) const;
+	inline void sdaLow(void) const;
+	inline void sdaHigh(void) const;
+	inline void sclLow(void) const;
+	inline void sclHigh(void) const;
+	inline bool sclHighAndStretch(AsyncDelay& timeout) const;
 
 
-    inline void setRxBuffer(void *rxBuffer, uint8_t rxBufferSize) {
-        _rxBuffer = (uint8_t*)rxBuffer;
-        _rxBufferSize = rxBufferSize;
-        _rxBufferIndex = 0;
-        _rxBufferBytesRead = 0;
+    // Setters to override functions which control the SDA and SCL pins
+    inline void setSetSdaLow(void (*sdaLow)(const SoftWire*)) {
+        _sdaLow = sdaLow;
+    }
+    inline void setSetSdaHigh(void (*sdaHigh)(const SoftWire*)) {
+        _sdaHigh = sdaHigh;
+    }
+    inline void setSetSclLow(void (*sclLow)(const SoftWire*)) {
+        _sclLow = sclLow;
+    }
+    inline void setSetSclHigh(void (*sclHigh)(const SoftWire*)) {
+        _sclHigh = sclHigh;
     }
 
-    inline void setTxBuffer(void *txBuffer, uint8_t txBufferSize) {
-        _txBuffer = (uint8_t*)txBuffer;
-        _txBufferSize = txBufferSize;
-        _txBufferIndex = 0;
+    // Setters to override the functions which read the status of SDA and SCL
+    inline void setReadSda(uint8_t (*readSda)(const SoftWire*)) {
+        _readSda = readSda;
+    }
+    inline void setReadScl(uint8_t (*readScl)(const SoftWire*)) {
+        _readScl = readScl;
     }
 
     // Wrapper functions to provide direct compatibility with the Wire library (TwoWire class)
@@ -107,7 +117,6 @@ public:
         // TODO: (to be implemented in Wire)
     }
 
-	void end(void);
 	void setClock(uint32_t frequency); // Approximate frequency in Hz
     void beginTransmission(uint8_t address);
     inline void beginTransmission(int address) {
@@ -123,6 +132,21 @@ public:
     uint8_t requestFrom(uint8_t address, uint8_t quantity, uint8_t sendStop = true);
     inline uint8_t requestFrom(int address, int quantity, int sendStop = true) {
         return requestFrom((uint8_t)address, (uint8_t)quantity, (uint8_t)sendStop);
+    }
+
+    // The Wire compatibility functions require RX and TX buffers. The same address space may be used for both
+    // as long as the user does not call receiveFrom between startTransmission and endTransmission.
+    inline void setRxBuffer(void *rxBuffer, uint8_t rxBufferSize) {
+        _rxBuffer = (uint8_t*)rxBuffer;
+        _rxBufferSize = rxBufferSize;
+        _rxBufferIndex = 0;
+        _rxBufferBytesRead = 0;
+    }
+
+    inline void setTxBuffer(void *txBuffer, uint8_t txBufferSize) {
+        _txBuffer = (uint8_t*)txBuffer;
+        _txBufferSize = txBufferSize;
+        _txBufferIndex = 0;
     }
 
 private:
@@ -144,12 +168,10 @@ private:
 	//uint8_t _txBufferLength; // Length of data the user tried to send
 	uint8_t _txBufferIndex; // Index into buffer
 
-
-public:
-	void (*_setSdaLow)(const SoftWire *p);
-	void (*_setSdaHigh)(const SoftWire *p);
-	void (*_setSclLow)(const SoftWire *p);
-	void (*_setSclHigh)(const SoftWire *p);
+	void (*_sdaLow)(const SoftWire *p);
+	void (*_sdaHigh)(const SoftWire *p);
+	void (*_sclLow)(const SoftWire *p);
+	void (*_sclHigh)(const SoftWire *p);
 	uint8_t (*_readSda)(const SoftWire *p);
 	uint8_t (*_readScl)(const SoftWire *p);
 };
@@ -278,32 +300,32 @@ SoftWire::result_t SoftWire::readThenNack(uint8_t &data) const
 }
 
 
-void SoftWire::setSdaLow(void) const
+void SoftWire::sdaLow(void) const
 {
-	_setSdaLow(this);
+	_sdaLow(this);
 }
 
 
-void SoftWire::setSdaHigh(void) const
+void SoftWire::sdaHigh(void) const
 {
-	_setSdaHigh(this);
+	_sdaHigh(this);
 }
 
 
-void SoftWire::setSclLow(void) const
+void SoftWire::sclLow(void) const
 {
-	_setSclLow(this);
+	_sclLow(this);
 }
 
 
-void SoftWire::setSclHigh(void) const
+void SoftWire::sclHigh(void) const
 {
-	_setSclHigh(this);
+	_sclHigh(this);
 }
 
-bool SoftWire::setSclHighAndStretch(AsyncDelay& timeout) const
+bool SoftWire::sclHighAndStretch(AsyncDelay& timeout) const
 {
-	_setSclHigh(this);
+	_sclHigh(this);
 
 	// Wait for SCL to actually become high in case the slave keeps
 	// it low (clock stretching).
