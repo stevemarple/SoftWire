@@ -311,7 +311,7 @@ SoftWire::result_t SoftWire::llRead(uint8_t &data, bool sendAck) const
 
 	delayMicroseconds(_delay_us);
 
-	// Release SCL  
+	// Release SCL
 	if (!sclHighAndStretch(timeout))
 		return timedOut;
 	delayMicroseconds(_delay_us);
