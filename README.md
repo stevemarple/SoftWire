@@ -24,6 +24,9 @@ buffers, and configure SoftWire to use them before the high-level
 functions `beginTransmission()`, `endTransmission()`, `read()`, `write()` and
 `requestFrom ()` can be used.
 
+It is possible to assign (and reassign) the pins associated with SCL and SDA
+at run-time using the functions `setScl()` and `setSda()`.
+
 ## Important changes for users of the v1.* library
 
 To support the high-level functions required for compatibility with
