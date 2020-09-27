@@ -1,5 +1,6 @@
-SoftWire
-========
+# SoftWire
+
+## Introduction
 
 SoftWire is a software I2C implementation for Arduino and other
 Wiring-type environments. It utilises the `pinMode()`,
@@ -33,26 +34,26 @@ The setter functions `setSdaLow()`, `setSdaHigh()`, `setSclLow()`,
 `setSclHigh()`, `setReadSda()`, `setReadScl()` must be used to
 override the functions which control and read the SDA and SCL signals.
 
+The functions which actually set SCL/SDA  low/high are now named
+`sclLow()`, `sdaLow()`, `sclHigh()` and `sdaHigh()`. These functions
+should not be called directly in normal use but may be required to
+force some devices into low-power mode.
 
-License
--------
+## License
 
 The SoftWire library is licensed with the GNU Lesser General Public
 License. See LICENSE.txt for details.
 
+## Requirements
 
-Requirements
-------------
+The AsyncDelay library is required, see
+[https://github.com/stevemarple/AsyncDelay](https://github.com/stevemarple/AsyncDelay)
 
-The AsyncDelay library is required, see https://github.com/stevemarple/AsyncDelay
-
-Contributors
-------------
+## Contributors
 
 Steve Marple
 Matthijs Kooijman
 
-Credits
--------
+## Credits
 
 This library is inspired by Peter Fleury's i2cmaster library.
