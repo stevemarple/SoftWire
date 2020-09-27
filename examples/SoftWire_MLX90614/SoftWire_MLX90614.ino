@@ -55,9 +55,9 @@ float convertToDegC(uint16_t data)
 void exitPWM(void)
 {
 	// Make SMBus request to force SMBus output instead of PWM
-	SoftWire::setSclLow(&i2c);
+	SoftWire::sclLow(&i2c);
 	delay(3); // Must be > 1.44ms
-	SoftWire::setSclHigh(&i2c);
+	SoftWire::sclHigh(&i2c);
 	delay(2);
 }
 
