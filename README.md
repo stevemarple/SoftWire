@@ -22,7 +22,9 @@ high-level functions provide almost direct compatibility with the Wire
 library. However, the user must first declare transmit and receive
 buffers, and configure SoftWire to use them before the high-level
 functions `beginTransmission()`, `endTransmission()`, `read()`, `write()` and
-`requestFrom ()` can be used.
+`requestFrom ()` can be used. Notify SoftWire of the buffers by calling the
+`setTxBuffer()` and `setRxBuffer()` functions, passing in a pointer to a
+byte or character buffer and the size of the buffer. See the [ReadDS1307](examples/ReadDS1307/ReadDS1307.ino) fort an exmaple of how this is done.
 
 It is possible to assign (and reassign) the pins associated with SCL and SDA
 at run-time using the functions `setScl()` and `setSda()`.
