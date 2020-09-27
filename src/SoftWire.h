@@ -60,7 +60,7 @@ public:
 	result_t llRepeatedStart(uint8_t rawAddr) const;
 	result_t llStartWait(uint8_t rawAddr) const;
 
-	result_t stop(void) const;
+	result_t stop(bool allowClockStretch=true) const;
 
 	inline result_t startRead(uint8_t addr) const;
 	inline result_t startWrite(uint8_t addr) const;
@@ -334,7 +334,7 @@ bool SoftWire::sclHighAndStretch(AsyncDelay& timeout) const
 	// it low (clock stretching).
 	while (_readScl(this) == LOW)
 		if (timeout.isExpired()) {
-			stop(); // Reset bus
+			stop(false); // Reset bus. Do not allow clock stretching here
 			return false;
 		}
 

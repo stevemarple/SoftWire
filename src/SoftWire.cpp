@@ -123,7 +123,7 @@ void SoftWire::begin(void) const
 }
 
 
-SoftWire::result_t SoftWire::stop(void) const
+SoftWire::result_t SoftWire::stop(bool allowClockStretch) const
 {
 	AsyncDelay timeout(_timeout_ms, AsyncDelay::MILLIS);
 
@@ -136,8 +136,12 @@ SoftWire::result_t SoftWire::stop(void) const
 	delayMicroseconds(_delay_us);
 
 	// Release SCL
-	if (!sclHighAndStretch(timeout))
-		return timedOut;
+	if (allowClockStretch) {
+		if (!sclHighAndStretch(timeout))
+			return timedOut;
+	} else {
+		sclHigh();
+	}
 	delayMicroseconds(_delay_us);
 
 	// Release SDA
