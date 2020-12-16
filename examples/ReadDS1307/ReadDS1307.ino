@@ -69,7 +69,7 @@ void readTime(void)
     pm = registers[2] & 0x20;
     tenHour = (registers[2] & 0x10) >> 4;
   } else {
-    tenHour = (registers[2] & 0x20) >> 4;
+    tenHour = (registers[2] & 0x30) >> 4;
   }
   unitHour = registers[2] & 0x0f;
   int hour = (10 * tenHour) + unitHour;
