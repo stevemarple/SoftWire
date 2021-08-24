@@ -204,6 +204,7 @@ SoftWire::result_t SoftWire::llStartWait(uint8_t rawAddr) const
 			return ack;
 		case nack:
 			stop();
+			return nack;
 		default:
 			// timeout, and anything else we don't know about
 			stop();
