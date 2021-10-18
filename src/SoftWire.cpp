@@ -429,7 +429,7 @@ uint8_t SoftWire::endTransmissionInner(void) const
     else if (r == timedOut)
         return 4;
 
-    for (uint8_t i = 0; i < _txBufferIndex; ++i) {
+    for (uint8_t i = 0; i < _txBufferSize; ++i) {
         r = llWrite(_txBuffer[i]);
         if (r == nack)
             return 3;
