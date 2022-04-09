@@ -130,9 +130,9 @@ public:
 
 
     uint8_t requestFrom(uint8_t address, uint8_t quantity, uint8_t sendStop = true);
-    inline uint8_t requestFrom(int address, int quantity, int sendStop = true) {
-        return requestFrom((uint8_t)address, (uint8_t)quantity, (uint8_t)sendStop);
-    }
+    // inline uint8_t requestFrom(int address, int quantity) {
+    //     return requestFrom((uint8_t)address, (uint8_t)quantity, (uint8_t)true);
+    // }
 
     // The Wire compatibility functions require RX and TX buffers. The same address space may be used for both
     // as long as the user does not call receiveFrom between startTransmission and endTransmission.
