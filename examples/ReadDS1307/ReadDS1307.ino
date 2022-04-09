@@ -30,6 +30,7 @@ void printTwoDigit(int n)
   Serial.print(n);
 }
 
+
 void readTime(void)
 {
   // Ensure register address is valid
@@ -102,6 +103,7 @@ void readTime(void)
   Serial.println();
 }
 
+
 void setup(void)
 {
 #if F_CPU >= 12000000UL
@@ -132,4 +134,3 @@ void loop(void)
     readInterval.restart();
   }
 }
-
