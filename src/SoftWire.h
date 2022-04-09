@@ -166,6 +166,7 @@ private:
 	uint8_t *_txBuffer; // Address of user-supplied buffer
 	uint8_t _txBufferSize; // Size of user-supplied buffer
 	uint8_t _txBufferIndex; // Index into buffer
+	mutable bool _transmissionInProgress;
 
 	void (*_sdaLow)(const SoftWire *p);
 	void (*_sdaHigh)(const SoftWire *p);

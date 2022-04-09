@@ -100,6 +100,7 @@ SoftWire::SoftWire(uint8_t sda, uint8_t scl) :
 	_txBuffer(NULL),
     _txBufferSize(0),
 	_txBufferIndex(0),
+	_transmissionInProgress(false),
     _sdaLow(sdaLow),
 	_sdaHigh(sdaHigh),
 	_sclLow(sclLow),
@@ -126,6 +127,7 @@ void SoftWire::begin(void) const
 SoftWire::result_t SoftWire::stop(bool allowClockStretch) const
 {
 	AsyncDelay timeout(_timeout_ms, AsyncDelay::MILLIS);
+	_transmissionInProgress = false;
 
 	// Force SCL low
 	_sclLow(this);
@@ -417,13 +419,19 @@ uint8_t SoftWire::endTransmission(uint8_t sendStop)
     uint8_t r = endTransmissionInner();
     if (sendStop)
         stop();
+    else
+        _transmissionInProgress = true;
     return r;
 }
 
 uint8_t SoftWire::endTransmissionInner(void) const
 {
-    // TODO: Consider repeated start conditions
-    result_t r = start(_txAddress, writeMode);
+    result_t r;
+	if (_transmissionInProgress) {
+		r = repeatedStart(_txAddress, writeMode);
+	} else {
+		r = start(_txAddress, writeMode);
+	}
     if (r == nack)
         return 2;
     else if (r == timedOut)
@@ -445,9 +453,17 @@ uint8_t SoftWire::endTransmissionInner(void) const
 
 uint8_t SoftWire::requestFrom(uint8_t address, uint8_t quantity, uint8_t sendStop)
 {
+    result_t r;
     _rxBufferIndex = 0;
     _rxBufferBytesRead = 0;
-    if (start(address, readMode) == 0) {
+
+    if (_transmissionInProgress) {
+    r = repeatedStart(address, readMode);
+	} else {
+		r = start(address, readMode);
+	}
+
+    if (r == ack) {
         for (uint8_t i = 0; i < quantity; ++i) {
             if (i >= _rxBufferSize)
                 break; // Don't write beyond buffer
@@ -459,8 +475,11 @@ uint8_t SoftWire::requestFrom(uint8_t address, uint8_t quantity, uint8_t sendSto
         }
     }
 
-    if (sendStop)
-        stop();
+    if (sendStop) {
+      stop();
+	} else {
+		_transmissionInProgress = true;
+	}
 
     return _rxBufferBytesRead;
 }
