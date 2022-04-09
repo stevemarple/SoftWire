@@ -165,7 +165,6 @@ private:
 	uint8_t _txAddress; // The address where data is to be sent to
 	uint8_t *_txBuffer; // Address of user-supplied buffer
 	uint8_t _txBufferSize; // Size of user-supplied buffer
-	//uint8_t _txBufferLength; // Length of data the user tried to send
 	uint8_t _txBufferIndex; // Index into buffer
 
 	void (*_sdaLow)(const SoftWire *p);
