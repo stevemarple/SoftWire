@@ -6,51 +6,49 @@
 
 #ifdef CRITICAL_SECTION
   // CRITICAL_SECTION has already been defined somewhere outside this library
-#else
-  #if defined(ARDUINO_ARCH_AVR)
-    #include <util/atomic.h>
-    #define CRITICAL_SECTION ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+#elif defined(ARDUINO_ARCH_AVR)
+  #include <util/atomic.h>
+  #define CRITICAL_SECTION ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 
-  #elif defined(ARDUINO_ARCH_SAM)
-    // Workaround as suggested by Stackoverflow user "Notlikethat"
-    // http://stackoverflow.com/questions/27998059/atomic-block-for-reading-vs-arm-systicks
+#elif defined(ARDUINO_ARCH_SAM)
+  // Workaround as suggested by Stackoverflow user "Notlikethat"
+  // http://stackoverflow.com/questions/27998059/atomic-block-for-reading-vs-arm-systicks
 
-    static inline int __int_disable_irq(void) {
-      int primask;
-      asm volatile("mrs %0, PRIMASK\n" : "=r"(primask));
-      asm volatile("cpsid i\n");
-      return primask & 1;
+  static inline int __int_disable_irq(void) {
+    int primask;
+    asm volatile("mrs %0, PRIMASK\n" : "=r"(primask));
+    asm volatile("cpsid i\n");
+    return primask & 1;
+  }
+
+  static inline void __int_restore_irq(int *primask) {
+    if (!(*primask)) {
+      asm volatile ("" ::: "memory");
+      asm volatile("cpsie i\n");
     }
+  }
+  // This critical section macro borrows heavily from
+  // avr-libc util/atomic.h
+  // --> http://www.nongnu.org/avr-libc/user-manual/atomic_8h_source.html
+  #define CRITICAL_SECTION for (int primask_save __attribute__((__cleanup__(__int_restore_irq))) = __int_disable_irq(), __ToDo = 1; __ToDo; __ToDo = 0)
 
-    static inline void __int_restore_irq(int *primask) {
-      if (!(*primask)) {
-        asm volatile ("" ::: "memory");
-        asm volatile("cpsie i\n");
-      }
-    }
-    // This critical section macro borrows heavily from
-    // avr-libc util/atomic.h
-    // --> http://www.nongnu.org/avr-libc/user-manual/atomic_8h_source.html
-    #define CRITICAL_SECTION for (int primask_save __attribute__((__cleanup__(__int_restore_irq))) = __int_disable_irq(), __ToDo = 1; __ToDo; __ToDo = 0)
+#elif defined(ARDUINO_ARCH_STM32)
+  #include <Arduino.h>
+  #include <cmsis_gcc.h>
+  // exact same as above only using predefined CMSIS functions
+  
+  static inline int __int_disable_irq(void) {
+    int primask = __get_PRIMASK();
+    __disable_irq();
+    return primask & 1;
+  }
 
-  #elif defined(ARDUINO_ARCH_STM32)
-    #include <Arduino.h>
-    #include <cmsis_gcc.h>
-    // exact same as above only using predefined CMSIS functions
-    
-    static inline int __int_disable_irq(void) {
-      int primask = __get_PRIMASK();
-      __disable_irq();
-      return primask & 1;
+  static inline void __int_restore_irq(int *primask) {
+    if (!(*primask)) {
+      __enable_irq();
     }
-
-    static inline void __int_restore_irq(int *primask) {
-      if (!(*primask)) {
-        __enable_irq();
-      }
-    }
-    #define CRITICAL_SECTION for (int primask_save __attribute__((__cleanup__(__int_restore_irq))) = __int_disable_irq(), __ToDo = 1; __ToDo; __ToDo = 0)
-  #endif
+  }
+  #define CRITICAL_SECTION for (int primask_save __attribute__((__cleanup__(__int_restore_irq))) = __int_disable_irq(), __ToDo = 1; __ToDo; __ToDo = 0)
 #else
   #pragma message "Your controller architecture is missing interrupt protection"
 #endif
