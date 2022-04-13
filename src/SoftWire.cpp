@@ -37,7 +37,7 @@
   // --> http://www.nongnu.org/avr-libc/user-manual/atomic_8h_source.html
   #define CRITICAL_SECTION for (int primask_save __attribute__((__cleanup__(__int_restore_irq))) = __int_disable_irq(), __ToDo = 1; __ToDo; __ToDo = 0)
 
-#elif defined(ARDUINO_ARCH_STM32) && defined(STM32_CORE_VERSION)
+#elif defined(ARDUINO_ARCH_STM32)
 #include <Arduino.h>
 #include <cmsis_gcc.h>
 	// exact same as above only using predefined CMSIS functions
