@@ -8,8 +8,6 @@
 #include <AsyncDelay.h>
 
 //
-// 2022-04-13 by Technik Gegg
-//
 //    On the Arduino Core STM32 framework pin definitions have moved
 //    from uint8_t to uint32_t in order to reflect higher pin numbers on 
 //    some of the newer MCUs available. 
@@ -27,10 +25,10 @@
 //    allows to adopt your source code quickly for a different framework without the 
 //    hassle of going through the code and changing/casting those pin definitions.
 //
-#if !defined(STM32_CORE_VERSION)
-  typedef uint8_t     pin_t;
-#else
+#if defined(STM32_CORE_VERSION)
   typedef uint32_t    pin_t;
+#else
+  typedef uint8_t     pin_t;
 #endif
 
 class SoftWire : public Stream {
