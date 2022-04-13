@@ -10,17 +10,18 @@
 //
 // 2022-04-13 by Technik Gegg
 //
-//    On the Arduino Core STM32 framework (STM32_CORE_VERSION) pin definitions
-//    moved from uint8_t to uint32_t in order to reflect higher pin numbers on 
+//    On the Arduino Core STM32 framework pin definitions have moved
+//    from uint8_t to uint32_t in order to reflect higher pin numbers on 
 //    some of the newer MCUs available. 
-//    Using uint8_t may cause a cut off while storing pin numbers and thus,
-//    such pins will not function correctly.
+//    Using uint8_t for storing pin numbers internally may cause cut offs and thus,
+//    such pins will not be addressed and function correctly.
 //    For other frameworks, which do not support newer MCUs, this isn't an issue
 //    and hence I'm using the conditional typedef down below.
 //
 //    If your project or library bases on/supports the Arduino Core STM32 framework,
 //    I'd highly recommend using the same construct as shown below in every location
-//    where you either store or return pin numbers, just to be future proof.
+//    of your source code where you either store or return pin numbers, just to be future proof.
+//
 //    Using 32 bit for storing pin numbers might seem a bit overkill but one
 //    never knows what the future brings and eventually, using a specific type
 //    allows to adopt your source code quickly for a different framework without the 
