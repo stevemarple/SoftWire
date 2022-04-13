@@ -7,6 +7,31 @@
 #include <stdint.h>
 #include <AsyncDelay.h>
 
+//
+// 2022-04-13 by Technik Gegg
+//
+//    On the Arduino Core STM32 framework (STM32_CORE_VERSION) pin definitions
+//    moved from uint8_t to uint32_t in order to reflect higher pin numbers on 
+//    some of the newer MCUs available. 
+//    Using uint8_t may cause a cut off while storing pin numbers and thus,
+//    such pins will not function correctly.
+//    For other frameworks, which do not support newer MCUs, this isn't an issue
+//    and hence I'm using the conditional typedef down below.
+//
+//    If your project or library bases on/supports the Arduino Core STM32 framework,
+//    I'd highly recommend using the same construct as shown below in every location
+//    where you either store or return pin numbers, just to be future proof.
+//    Using 32 bit for storing pin numbers might seem a bit overkill but one
+//    never knows what the future brings and eventually, using a specific type
+//    allows to adopt your source code quickly for a different framework without the 
+//    hassle of going through the code and changing/casting those pin definitions.
+//
+#if !defined(STM32_CORE_VERSION)
+  typedef uint8_t     pin_t;
+#else
+  typedef uint32_t    pin_t;
+#endif
+
 class SoftWire : public Stream {
   public:
     enum result_t {
@@ -33,17 +58,17 @@ class SoftWire : public Stream {
     // SMBus uses CRC-8 for its PEC
     static uint8_t crc8_update(uint8_t crc, uint8_t data);
 
-    SoftWire(uint8_t sda, uint8_t scl);
-    inline uint8_t getSda(void) const;
-    inline uint8_t getScl(void) const;
+    SoftWire(pin_t sda, pin_t scl);
+    inline pin_t getSda(void) const;
+    inline pin_t getScl(void) const;
     inline uint8_t getDelay_us(void) const;
     inline uint16_t getTimeout_ms(void) const;
     inline uint8_t getInputMode(void) const;
 
     // begin() must be called after any changes are made to SDA and/or
     // SCL pins.
-    inline void setSda(uint8_t sda);
-    inline void setScl(uint8_t scl);
+    inline void setSda(pin_t sda);
+    inline void setScl(pin_t scl);
     inline void enablePullups(bool enablePullups = true);
 
     inline void setDelay_us(uint8_t delay_us);
@@ -150,8 +175,8 @@ class SoftWire : public Stream {
     }
 
   private:
-    uint8_t _sda;
-    uint8_t _scl;
+    pin_t _sda;
+    pin_t _scl;
     uint8_t _inputMode;
     uint8_t _delay_us;
     uint16_t _timeout_ms;
@@ -180,13 +205,13 @@ class SoftWire : public Stream {
 };
 
 
-uint8_t SoftWire::getSda(void) const
+pin_t SoftWire::getSda(void) const
 {
   return _sda;
 }
 
 
-uint8_t SoftWire::getScl(void) const
+pin_t SoftWire::getScl(void) const
 {
   return _scl;
 }
@@ -210,13 +235,13 @@ uint8_t SoftWire::getInputMode(void) const
 }
 
 
-void SoftWire::setSda(uint8_t sda)
+void SoftWire::setSda(pin_t sda)
 {
   _sda = sda;
 }
 
 
-void SoftWire::setScl(uint8_t scl)
+void SoftWire::setScl(pin_t scl)
 {
   _scl = scl;
 }
