@@ -4,58 +4,8 @@
 // protection against spurious signals on the I2C bus is only available
 // for AVR architectures where ATOMIC_BLOCK is defined.
 
-//
-// 2022-04-13 by Technik Gegg
-//
-//    Added a workaround for the missing ATOMIC_BLOCK in non AVR architectures, 
-//    which I've found on Stackoverflow (see link in comments below).
-//
-
 #if defined(ARDUINO_ARCH_AVR)
 #include <util/atomic.h>
-#define CRITICAL_SECTION ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-
-#elif defined(ARDUINO_ARCH_SAM)
-  // Workaround as suggested by Stackoverflow user "Notlikethat"
-  // http://stackoverflow.com/questions/27998059/atomic-block-for-reading-vs-arm-systicks
-
-  static inline int __int_disable_irq(void) {
-    int primask;
-    asm volatile("mrs %0, PRIMASK\n" : "=r"(primask));
-    asm volatile("cpsid i\n");
-    return primask & 1;
-  }
-
-  static inline void __int_restore_irq(int *primask) {
-    if (!(*primask)) {
-      asm volatile ("" ::: "memory");
-      asm volatile("cpsie i\n");
-    }
-  }
-  // This critical section macro borrows heavily from
-  // avr-libc util/atomic.h
-  // --> http://www.nongnu.org/avr-libc/user-manual/atomic_8h_source.html
-  #define CRITICAL_SECTION for (int primask_save __attribute__((__cleanup__(__int_restore_irq))) = __int_disable_irq(), __ToDo = 1; __ToDo; __ToDo = 0)
-
-#elif defined(ARDUINO_ARCH_STM32)
-#include <Arduino.h>
-#include <cmsis_gcc.h>
-	// exact same as above only using predefined CMSIS functions
-	
-  static inline int __int_disable_irq(void) {
-    int primask = __get_PRIMASK();
-    __disable_irq();
-    return primask & 1;
-  }
-
-  static inline void __int_restore_irq(int *primask) {
-    if (!(*primask)) {
-      __enable_irq();
-    }
-  }
-  #define CRITICAL_SECTION for (int primask_save __attribute__((__cleanup__(__int_restore_irq))) = __int_disable_irq(), __ToDo = 1; __ToDo; __ToDo = 0)
-#else
-  #error Unsupported controller architecture
 #endif
 
 #include <SoftWire.h>
@@ -66,8 +16,8 @@ void SoftWire::sdaLow(const SoftWire *p)
 {
   pin_t sda = p->getSda();
 
-#ifdef CRITICAL_SECTION
-  CRITICAL_SECTION
+#ifdef ATOMIC_BLOCK
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 #endif
   {
     digitalWrite(sda, LOW);
@@ -88,8 +38,8 @@ void SoftWire::sclLow(const SoftWire *p)
 {
   pin_t scl = p->getScl();
 
-#ifdef CRITICAL_SECTION
-  CRITICAL_SECTION
+#ifdef ATOMIC_BLOCK
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 #endif
   {
     digitalWrite(scl, LOW);
