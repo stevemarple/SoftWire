@@ -86,25 +86,25 @@ class SoftWire : public Stream {
 
 
     // Setters to override functions which control the SDA and SCL pins
-    inline void setSetSdaLow(void (*sdaLow)(const SoftWire*)) {
-      _sdaLow = sdaLow;
+    inline void setSetSdaLow(void (*sdaLowFn)(const SoftWire*)) {
+      _sdaLow = sdaLowFn;
     }
-    inline void setSetSdaHigh(void (*sdaHigh)(const SoftWire*)) {
-      _sdaHigh = sdaHigh;
+    inline void setSetSdaHigh(void (*sdaHighFn)(const SoftWire*)) {
+      _sdaHigh = sdaHighFn;
     }
-    inline void setSetSclLow(void (*sclLow)(const SoftWire*)) {
-      _sclLow = sclLow;
+    inline void setSetSclLow(void (*sclLowFn)(const SoftWire*)) {
+      _sclLow = sclLowFn;
     }
-    inline void setSetSclHigh(void (*sclHigh)(const SoftWire*)) {
-      _sclHigh = sclHigh;
+    inline void setSetSclHigh(void (*sclHighFn)(const SoftWire*)) {
+      _sclHigh = sclHighFn;
     }
 
     // Setters to override the functions which read the status of SDA and SCL
-    inline void setReadSda(uint8_t (*readSda)(const SoftWire*)) {
-      _readSda = readSda;
+    inline void setReadSda(uint8_t (*readSdaFn)(const SoftWire*)) {
+      _readSda = readSdaFn;
     }
-    inline void setReadScl(uint8_t (*readScl)(const SoftWire*)) {
-      _readScl = readScl;
+    inline void setReadScl(uint8_t (*readSclFn)(const SoftWire*)) {
+      _readScl = readSclFn;
     }
 
     // Wrapper functions to provide direct compatibility with the Wire library (TwoWire class)
